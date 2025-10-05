@@ -10,6 +10,7 @@ export default function SalaryPage() {
   const [year, setYear] = useState(today.getFullYear());
   const [salaryData, setSalaryData] = useState(null);
   const [employeeId, setEmployeeId] = useState(null);
+  const [isArchived, setIsArchived] = useState(false);
 
   useEffect(() => {
     const emp = localStorage.getItem("employee");
@@ -27,16 +28,25 @@ export default function SalaryPage() {
   const fetchSalary = async () => {
     if (!employeeId) return;
 
-    // جلب تاريخ التعيين
+    // ✅ جلب حالة الموظف (بدون archive_date لتفادي الخطأ)
     const { data: empData, error: empError } = await supabase
       .from("employees")
-      .select("hire_date")
+      .select("is_active, hire_date, archived, archive_date")
       .eq("id", employeeId)
       .single();
 
-    if (empError || !empData) return;
+    if (empError || !empData) {
+      console.error("خطأ في جلب بيانات الموظف:", empError);
+      return;
+    }
 
-    const hireDate = new Date(empData.hire_date);
+    // ✅ تحديد حالة الأرشفة
+    const archived = empData.is_active === false || empData.archived === true;
+    setIsArchived(archived);
+
+    const hireDate = empData.hire_date
+      ? new Date(empData.hire_date)
+      : new Date("2000-01-01");
     const selectedDate = new Date(year, month - 1, 1);
 
     if (
@@ -51,7 +61,7 @@ export default function SalaryPage() {
     const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
     const endDate = `${year}-${String(month).padStart(2, "0")}-${lastDay}`;
 
-    // جلب الراتب الأساسي
+    // 🟢 جلب آخر راتب قبل نهاية الشهر
     const { data: salaryHistory } = await supabase
       .from("salary_history")
       .select("base_salary, created_at")
@@ -67,9 +77,27 @@ export default function SalaryPage() {
     }
 
     const baseSalary = salaryHistory.base_salary;
-    const dailyRate = baseSalary / 30;
+    const dailyRate = baseSalary / 26;
 
-    // جلب المعاملات
+    // 🟢 لو مؤرشف، نمنع احتساب بعد تاريخ الأرشفة
+    let effectiveEndDate = new Date(endDate);
+    const archiveDate = empData.archive_date
+      ? new Date(empData.archive_date)
+      : null;
+
+    if (archived && archiveDate) {
+      if (
+        selectedDate.getFullYear() === archiveDate.getFullYear() &&
+        selectedDate.getMonth() === archiveDate.getMonth()
+      ) {
+        effectiveEndDate = archiveDate;
+      } else if (selectedDate > archiveDate) {
+        setSalaryData(null);
+        return;
+      }
+    }
+
+    // 🟢 جلب المعاملات
     const { data: transactions } = await supabase
       .from("transactions")
       .select("*")
@@ -77,33 +105,49 @@ export default function SalaryPage() {
       .gte("date", startDate)
       .lte("date", endDate);
 
-    // حساب الملخصات
+    // 🧮 حساب المعاملات
     let bonus = 0,
       deduction = 0,
       advance = 0,
+      leaveDays = 0,
       leaveDeduction = 0,
       absenceDeduction = 0;
 
     transactions?.forEach((t) => {
-      if (t.type === "bonus") bonus += Number(t.amount);
-      if (t.type === "deduction") deduction += Number(t.amount);
-      if (t.type === "advance") advance += Number(t.amount);
+      const val = Number(t.amount) || 0;
 
-      if (t.leave_day) {
-        const val = baseSalary / 30;
-        leaveDeduction += val;
-        deduction += val;
-      }
+      if (t.type === "bonus") bonus += val;
+      if (t.type === "deduction") deduction += val;
+      if (t.type === "advance") advance += val;
+
+      if (t.leave_day) leaveDays += 1;
       if (t.absence_day) {
-        const val = 500;
-        absenceDeduction += val;
-        deduction += val;
+        absenceDeduction += dailyRate;
+        deduction += dailyRate;
       }
     });
 
+    // 🟢 أول 4 أيام إجازة مجانية
+    const payableLeaveDays = leaveDays > 4 ? leaveDays - 4 : 0;
+    leaveDeduction = payableLeaveDays * dailyRate;
+    deduction += leaveDeduction;
+
+    // 🟢 تحديد الأيام المستحقة
     let daysWorked = 30;
     if (year === today.getFullYear() && month === today.getMonth() + 1) {
       daysWorked = today.getDate();
+    }
+
+    // 🛑 منع الزيادة بعد تاريخ الأرشفة
+    if (archived && archiveDate) {
+      if (
+        archiveDate.getFullYear() === year &&
+        archiveDate.getMonth() + 1 === month
+      ) {
+        daysWorked = archiveDate.getDate();
+      } else if (selectedDate > archiveDate) {
+        daysWorked = 0;
+      }
     }
 
     const earnedSalary = dailyRate * daysWorked;
@@ -111,12 +155,14 @@ export default function SalaryPage() {
 
     setSalaryData({
       baseSalary,
+      dailyRate,
       earnedSalary,
       bonus,
       deduction,
       advance,
       leaveDeduction,
       absenceDeduction,
+      leaveDays,
       netSalary,
       transactions,
     });
@@ -168,6 +214,12 @@ export default function SalaryPage() {
               الراتب الأساسي:{" "}
               <span className="font-semibold">
                 {salaryData.baseSalary.toFixed(2)} جنيه
+              </span>
+            </p>
+            <p className="text-gray-700">
+              الأجر اليومي:{" "}
+              <span className="font-semibold">
+                {salaryData.dailyRate.toFixed(2)} جنيه
               </span>
             </p>
             <p className="text-gray-700">
@@ -256,7 +308,11 @@ export default function SalaryPage() {
           )}
         </div>
       ) : (
-        <p className="text-gray-500">لا توجد بيانات لهذا الشهر</p>
+        <p className="text-gray-500">
+          {isArchived
+            ? "هذا الموظف مؤرشف ولا يتم احتساب راتبه بعد تاريخ الأرشفة"
+            : "لا توجد بيانات لهذا الشهر"}
+        </p>
       )}
     </div>
   );

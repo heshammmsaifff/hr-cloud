@@ -31,7 +31,10 @@ export default function AddEmployee() {
     e.preventDefault();
 
     try {
-      // 1. أضف الموظف
+      // ✅ تأكد أن الراتب رقم
+      const baseSalary = parseFloat(form.base_salary) || 0;
+
+      // ✅ 1. أضف الموظف الجديد كـ نشط افتراضيًا
       const { data: employee, error: empError } = await supabase
         .from("employees")
         .insert([
@@ -43,6 +46,7 @@ export default function AddEmployee() {
             job_title: form.job_title,
             hire_date: form.hire_date,
             branch: form.branch,
+            is_active: true, // ✅ الموظف الجديد نشط افتراضيًا
           },
         ])
         .select()
@@ -50,14 +54,14 @@ export default function AddEmployee() {
 
       if (empError) throw empError;
 
-      // 2. سجل الراتب الأول
+      // ✅ 2. سجل الراتب الأول بتاريخ اليوم (وليس تاريخ التعيين)
       const { error: salaryError } = await supabase
         .from("salary_history")
         .insert([
           {
             employee_id: employee.id,
-            base_salary: form.base_salary,
-            start_date: form.hire_date,
+            base_salary: baseSalary,
+            start_date: new Date().toISOString().split("T")[0], // ✅ تاريخ فعلي
           },
         ]);
 

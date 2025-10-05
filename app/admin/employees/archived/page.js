@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
+import Link from "next/link";
 
 export default function ArchivedEmployees() {
   const [employees, setEmployees] = useState([]);
@@ -23,6 +24,12 @@ export default function ArchivedEmployees() {
   };
 
   const handleRehire = async (id) => {
+    const confirmRehire = window.confirm(
+      "هل أنت متأكد أنك تريد إرجاع هذا الموظف للعمل؟"
+    );
+
+    if (!confirmRehire) return; // لو المستخدم لغى العملية، نخرج بدون تنفيذ
+
     const { error } = await supabase
       .from("employees")
       .update({ is_active: true })
@@ -45,41 +52,57 @@ export default function ArchivedEmployees() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white rounded-2xl shadow">
-      <h1 className="text-2xl font-bold mb-4">الموظفون السابقون</h1>
+      <h1 className="text-2xl font-bold mb-4 text-blue-700 text-center sm:text-right">
+        الموظفون السابقون
+      </h1>
+
       {employees.length === 0 ? (
-        <p>لا يوجد موظفون مؤرشفون</p>
+        <p className="text-center text-gray-500 py-8">لا يوجد موظفون مؤرشفون</p>
       ) : (
-        <table className="w-full border border-gray-200">
-          <thead>
-            <tr className="bg-gray-100 text-right">
-              <th className="p-2 border">الاسم</th>
-              <th className="p-2 border">الوظيفة</th>
-              <th className="p-2 border">الموبايل</th>
-              <th className="p-2 border">تاريخ التعيين</th>
-              <th className="p-2 border">إجراءات</th>
-            </tr>
-          </thead>
-          <tbody>
-            {employees.map((emp) => (
-              <tr key={emp.id} className="hover:bg-gray-50">
-                <td className="p-2 border">{emp.name}</td>
-                <td className="p-2 border">{emp.job_title}</td>
-                <td className="p-2 border">{emp.phone}</td>
-                <td className="p-2 border">
-                  {new Date(emp.hire_date).toLocaleDateString("ar-EG")}
-                </td>
-                <td className="p-2 border">
-                  <button
-                    onClick={() => handleRehire(emp.id)}
-                    className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
-                  >
-                    إرجاع للعمل
-                  </button>
-                </td>
+        <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+          <table className="w-full text-sm text-right min-w-[700px]">
+            <thead>
+              <tr className="bg-blue-50 text-blue-800 text-[15px]">
+                <th className="p-3 border-b">الاسم</th>
+                <th className="p-3 border-b">الوظيفة</th>
+                <th className="p-3 border-b">الموبايل</th>
+                <th className="p-3 border-b">تاريخ التعيين</th>
+                <th className="p-3 border-b text-center">إجراءات</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {employees.map((emp) => (
+                <tr
+                  key={emp.id}
+                  className="hover:bg-gray-50 transition-colors border-b"
+                >
+                  <td className="p-3 font-semibold text-gray-800">
+                    {emp.name}
+                  </td>
+                  <td className="p-3 text-gray-600">{emp.job_title}</td>
+                  <td className="p-3 text-gray-700">{emp.phone}</td>
+                  <td className="p-3 text-gray-700">
+                    {new Date(emp.hire_date).toLocaleDateString("ar-EG")}
+                  </td>
+                  <td className="p-3 flex flex-wrap gap-2 justify-center">
+                    <Link
+                      href={`/admin/employees/transactions/${emp.id}`}
+                      className="bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition"
+                    >
+                      معاملات
+                    </Link>
+                    <button
+                      onClick={() => handleRehire(emp.id)}
+                      className="bg-green-600 text-white px-3 py-1.5 rounded-lg hover:bg-green-700 transition"
+                    >
+                      إرجاع للعمل
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

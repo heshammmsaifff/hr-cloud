@@ -98,11 +98,11 @@ export default function EditEmployee() {
       return;
     }
 
-    // 2- لو الراتب اختلف → نضيف سطر جديد في salary_history
+    // 2- لو الموظف نشط والراتب اختلف → نضيف سطر جديد في salary_history
     const latestSalary = employee.salary_history?.[0]?.base_salary || 0;
     const newSalary = parseFloat(form.base_salary);
 
-    if (!isNaN(newSalary) && newSalary !== latestSalary) {
+    if (form.is_active && !isNaN(newSalary) && newSalary !== latestSalary) {
       const { error: salaryError } = await supabase
         .from("salary_history")
         .insert([
