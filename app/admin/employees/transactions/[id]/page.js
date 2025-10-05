@@ -112,9 +112,33 @@ export default function TransactionsPage() {
   // إضافة معاملة عادية
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
+
+  // خريطة ترجمة أنواع المعاملات
+  const typeLabels = {
+    bonus: "علاوة",
+    deduction: "خصم",
+    advance: "سلفة",
+    // أضف أي نوع آخر عندك هنا
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
+
+    const typeLabel = typeLabels[form.type] || form.type; // لو النوع مش موجود في الخريطة، خلي القيمة كما هي
+
+    // إعداد رسالة التأكيد
+    const confirmationMessage =
+      `هل أنت متأكد من إضافة المعاملة التالية؟\n\n` +
+      `نوع المعاملة: ${typeLabel}\n` +
+      `المبلغ: ${form.amount}\n` +
+      `ملاحظة: ${form.note}`;
+
+    // عرض رسالة التأكيد
+    const confirmed = window.confirm(confirmationMessage);
+    if (!confirmed) return; // لو ضغطت "تراجع"، نخرج بدون تنفيذ أي شيء
+
     setLoading(true);
+
     const { error } = await supabase.from("transactions").insert([
       {
         employee_id: id,
@@ -126,10 +150,14 @@ export default function TransactionsPage() {
         absence_day: false,
       },
     ]);
+
     if (!error) {
       setForm({ type: "bonus", amount: "", note: "" });
       fetchTransactions();
+    } else {
+      alert("حدث خطأ أثناء إضافة المعاملة.");
     }
+
     setLoading(false);
   };
 
