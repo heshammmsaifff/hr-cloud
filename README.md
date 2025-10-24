@@ -83,26 +83,26 @@ create table public.transactions (
 Clone the project:
 
 bash
-Copy code
+
 git clone <repo-url>
 cd <project-folder>
 Install dependencies:
 
 bash
-Copy code
+
 npm install
 # or
 yarn
 Set up environment variables in .env:
 
 ini
-Copy code
+
 NEXT_PUBLIC_SUPABASE_URL=<Your Supabase URL>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<Your Supabase ANON Key>
 Run the development server:
 
 bash
-Copy code
+
 npm run dev
 # or
 yarn dev
@@ -112,7 +112,7 @@ Then open your browser at:
 
 🧩 Project Structure
 bash
-Copy code
+
 pages/admin/
 │
 ├── login.js                 # Accountant login page
@@ -144,7 +144,7 @@ Monthly salary reports with net pay after deductions
 Make sure the UUID extension is enabled in your PostgreSQL database:
 
 sql
-Copy code
+
 create extension if not exists "uuid-ossp";
 Passwords are currently stored in plain text.
 You can later implement bcrypt or another hashing library for encryption.
@@ -152,5 +152,5 @@ You can later implement bcrypt or another hashing library for encryption.
 💼 Built with Next.js + Supabase to simplify HR and payroll management.
 
 yaml
-Copy code
+
 ```
