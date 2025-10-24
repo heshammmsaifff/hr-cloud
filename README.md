@@ -1,151 +1,156 @@
-🏢 نظام إدارة الموارد البشرية - HR Cloud
+# 🏢 HR Cloud - Human Resources Management System
 
-نظام سحابي لإدارة حسابات الموظفين، يشمل:
+A cloud-based system for managing employee accounts, including:
 
-إدارة بيانات الموظفين.
+- Managing employee data
+- Tracking salaries, bonuses, deductions, and advances
+- Recording attendance, absence, and leave
+- Accountant dashboard and financial operations management
 
-تتبع الرواتب، العلاوات، الخصومات، والسلف.
+---
 
-تسجيل حضور وغياب وإجازات الموظفين.
+## ⚙️ Requirements
 
-لوحة تحكم للمحاسب وإدارة العمليات المالية.
+- Node.js v18 or later
+- NPM or Yarn
+- PostgreSQL database (Supabase recommended)
 
-⚙️ المتطلبات
+---
 
-Node.js v18 أو أحدث
+## 🗄️ Database Setup
 
-NPM أو Yarn
+Create a new project on **Supabase**, then add the following tables in the **SQL Editor**:
 
-قاعدة بيانات PostgreSQL (يفضل Supabase)
-
-🗄️ قواعد البيانات
-
-قم بإنشاء مشروع جديد على Supabase، ثم أضف الجداول التالية في SQL Editor:
-
--- جدول مسؤولي النظام
+```sql
+-- Admin Users Table
 create table public.admin_users (
-id uuid not null default extensions.uuid_generate_v4 (),
-username text not null,
-password text not null,
-created_at timestamp without time zone null default now(),
-constraint admin_users_pkey primary key (id),
-constraint admin_users_username_key unique (username)
+  id uuid not null default extensions.uuid_generate_v4(),
+  username text not null,
+  password text not null,
+  created_at timestamp without time zone null default now(),
+  constraint admin_users_pkey primary key (id),
+  constraint admin_users_username_key unique (username)
 ) TABLESPACE pg_default;
 
--- جدول الموظفين
+-- Employees Table
 create table public.employees (
-id uuid not null default extensions.uuid_generate_v4 (),
-username text not null,
-password text not null,
-name text not null,
-phone text null,
-job_title text null,
-hire_date date not null,
-is_active boolean null default true,
-created_at timestamp without time zone null default now(),
-branch text null,
-constraint employees_pkey primary key (id),
-constraint employees_username_key unique (username)
+  id uuid not null default extensions.uuid_generate_v4(),
+  username text not null,
+  password text not null,
+  name text not null,
+  phone text null,
+  job_title text null,
+  hire_date date not null,
+  is_active boolean null default true,
+  created_at timestamp without time zone null default now(),
+  branch text null,
+  constraint employees_pkey primary key (id),
+  constraint employees_username_key unique (username)
 ) TABLESPACE pg_default;
 
--- جدول تاريخ الرواتب
+-- Salary History Table
 create table public.salary_history (
-id uuid not null default extensions.uuid_generate_v4 (),
-employee_id uuid null,
-base_salary numeric not null,
-start_date date not null,
-end_date date null,
-created_at timestamp without time zone null default now(),
-constraint salary_history_pkey primary key (id),
-constraint salary_history_employee_id_fkey foreign key (employee_id) references employees (id) on delete cascade
+  id uuid not null default extensions.uuid_generate_v4(),
+  employee_id uuid null,
+  base_salary numeric not null,
+  start_date date not null,
+  end_date date null,
+  created_at timestamp without time zone null default now(),
+  constraint salary_history_pkey primary key (id),
+  constraint salary_history_employee_id_fkey
+    foreign key (employee_id) references employees (id) on delete cascade
 ) TABLESPACE pg_default;
 
--- جدول المعاملات (علاوات، خصومات، سلف، إجازات)
+-- Transactions Table (Bonuses, Deductions, Advances, Leaves)
 create table public.transactions (
-id uuid not null default extensions.uuid_generate_v4 (),
-employee_id uuid null,
-amount numeric not null,
-type text null,
-note text null,
-date date not null default CURRENT_DATE,
-created_at timestamp without time zone null default now(),
-leave_day boolean null default false,
-absence_day boolean null default false,
-constraint transactions_pkey primary key (id),
-constraint transactions_employee_id_fkey foreign key (employee_id) references employees (id) on delete cascade,
-constraint transactions_type_check check (
-type = any (array['bonus'::text, 'deduction'::text, 'advance'::text])
-)
+  id uuid not null default extensions.uuid_generate_v4(),
+  employee_id uuid null,
+  amount numeric not null,
+  type text null,
+  note text null,
+  date date not null default CURRENT_DATE,
+  created_at timestamp without time zone null default now(),
+  leave_day boolean null default false,
+  absence_day boolean null default false,
+  constraint transactions_pkey primary key (id),
+  constraint transactions_employee_id_fkey
+    foreign key (employee_id) references employees (id) on delete cascade,
+  constraint transactions_type_check check (
+    type = any (array['bonus'::text, 'deduction'::text, 'advance'::text])
+  )
 ) TABLESPACE pg_default;
+💻 Local Development
+Clone the project:
 
-💻 التشغيل المحلي
-
-انسخ المشروع على جهازك:
-
+bash
+Copy code
 git clone <repo-url>
 cd <project-folder>
+Install dependencies:
 
-تثبيت الحزم:
-
+bash
+Copy code
 npm install
-
-# أو
-
+# or
 yarn
+Set up environment variables in .env:
 
-إعداد متغيرات البيئة .env:
-
+ini
+Copy code
 NEXT_PUBLIC_SUPABASE_URL=<Your Supabase URL>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<Your Supabase ANON Key>
+Run the development server:
 
-تشغيل المشروع محليًا:
-
+bash
+Copy code
 npm run dev
-
-# أو
-
+# or
 yarn dev
+Then open your browser at:
 
-افتح المتصفح على:
+👉 http://localhost:3000
 
-http://localhost:3000
-
-🧩 هيكل المشروع
-
+🧩 Project Structure
+bash
+Copy code
 pages/admin/
+│
+├── login.js                 # Accountant login page
+├── dashboard.js             # Admin dashboard
+│
+├── employees/
+│   ├── new.js               # Add new employee
+│   ├── edit/[id].js         # Edit employee details
+│   └── transactions/[id].js # Employee transactions history
+│
+├── lib/
+│   └── supabase.js          # Supabase client configuration
+│
+├── components/              # Shared UI components (tables, forms, cards, etc.)
+🔐 System Features
+Accountant-only login
 
-login.js : صفحة تسجيل الدخول للمحاسب
+Secure admin pages
 
-dashboard.js : لوحة التحكم
+Employee management (Add, Edit, Archive)
 
-employees/new.js : إضافة موظف جديد
+Salary and financial transaction management
 
-employees/edit/[id].js : تعديل بيانات الموظف
+Attendance, absence, and leave tracking
 
-employees/transactions/[id].js : سجل المعاملات
+Monthly salary reports with net pay after deductions
 
-lib/supabase.js : تهيئة اتصال Supabase
+📌 Notes
+Make sure the UUID extension is enabled in your PostgreSQL database:
 
-components/ : مكونات مشتركة (مثل الجداول، الفورمات، البطاقات)
-
-🔐 مميزات النظام
-
-تسجيل دخول للمحاسب فقط
-
-حماية صفحات الإدارة
-
-إدارة الموظفين (إضافة، تعديل، أرشفة)
-
-إدارة الرواتب والمعاملات المالية
-
-عرض تفاصيل الحضور، الإجازات، الغياب
-
-تقارير شهرية للرواتب والصافي بعد الخصومات
-
-📌 ملاحظات
-
-تأكد من تثبيت UUID extension في قاعدة بيانات PostgreSQL:
-
+sql
+Copy code
 create extension if not exists "uuid-ossp";
+Passwords are currently stored in plain text.
+You can later implement bcrypt or another hashing library for encryption.
 
-كلمة السر مخزنة كنص عادي، يمكنك لاحقًا استخدام bcrypt لتشفيرها.
+💼 Built with Next.js + Supabase to simplify HR and payroll management.
+
+yaml
+Copy code
+```
