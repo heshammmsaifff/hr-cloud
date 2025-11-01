@@ -31,7 +31,7 @@ export default function SalaryPage() {
     // ✅ جلب حالة الموظف (بدون archive_date لتفادي الخطأ)
     const { data: empData, error: empError } = await supabase
       .from("employees")
-      .select("is_active, hire_date, archived, archive_date")
+      .select("is_active, hire_date, is_archived, archive_date")
       .eq("id", employeeId)
       .single();
 
