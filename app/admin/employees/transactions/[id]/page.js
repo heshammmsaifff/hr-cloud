@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "../../../../lib/supabase";
+import Swal from "sweetalert2";
 
 export default function TransactionsPage() {
   const { id } = useParams();
@@ -12,7 +13,12 @@ export default function TransactionsPage() {
   const [month, setMonth] = useState(today.getMonth() + 1);
   const [year, setYear] = useState(today.getFullYear());
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ type: "bonus", amount: "", note: "" });
+  const [form, setForm] = useState({
+    type: "bonus",
+    amount: "",
+    note: "",
+    date: new Date().toISOString().split("T")[0],
+  });
   const [hireDate, setHireDate] = useState(null);
 
   // تحميل بيانات الموظف
@@ -26,6 +32,99 @@ export default function TransactionsPage() {
     if (!error && data) {
       setEmployee(data);
       setHireDate(new Date(data.hire_date));
+    }
+  };
+
+  const handleDeleteTransaction = async (transactionId) => {
+    const { isConfirmed } = await Swal.fire({
+      title: "تأكيد الحذف",
+      text: "هل أنت متأكد أنك تريد حذف هذه المعاملة؟",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "نعم، احذفها",
+      cancelButtonText: "إلغاء",
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+    });
+
+    if (!isConfirmed) return;
+
+    const { error } = await supabase
+      .from("transactions")
+      .delete()
+      .eq("id", transactionId);
+
+    if (error) {
+      Swal.fire("خطأ ❌", "حدث خطأ أثناء الحذف.", "error");
+    } else {
+      Swal.fire("تم ✅", "تم حذف المعاملة بنجاح.", "success");
+      fetchTransactions();
+    }
+  };
+
+  const handleEditTransaction = async (transaction) => {
+    // ✅ نعرض نافذة تعديل فيها القيم الحالية
+    const { value: formValues } = await Swal.fire({
+      title: "تعديل المعاملة",
+      html: `
+      <label>النوع:</label>
+      <select id="swal-type" class="swal2-input">
+        <option value="bonus" ${
+          transaction.type === "bonus" ? "selected" : ""
+        }>علاوة</option>
+        <option value="deduction" ${
+          transaction.type === "deduction" ? "selected" : ""
+        }>خصم</option>
+        <option value="advance" ${
+          transaction.type === "advance" ? "selected" : ""
+        }>سلفة</option>
+      </select>
+      <input id="swal-amount" type="number" class="swal2-input" placeholder="المبلغ" value="${
+        transaction.amount
+      }">
+      <input id="swal-note" type="text" class="swal2-input" placeholder="ملاحظات" value="${
+        transaction.note || ""
+      }">
+      <input id="swal-date" type="date" class="swal2-input" value="${
+        transaction.date
+      }">
+    `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: "💾 حفظ التعديلات",
+      cancelButtonText: "إلغاء",
+      preConfirm: () => {
+        const type = document.getElementById("swal-type").value;
+        const amount = document.getElementById("swal-amount").value;
+        const note = document.getElementById("swal-note").value;
+        const date = document.getElementById("swal-date").value;
+
+        if (!amount || !date) {
+          Swal.showValidationMessage("الرجاء إدخال المبلغ والتاريخ");
+          return false;
+        }
+
+        return { type, amount, note, date };
+      },
+    });
+
+    if (!formValues) return;
+
+    const { error } = await supabase
+      .from("transactions")
+      .update({
+        type: formValues.type,
+        amount: parseFloat(formValues.amount),
+        note: formValues.note,
+        date: formValues.date,
+      })
+      .eq("id", transaction.id);
+
+    if (error) {
+      Swal.fire("خطأ ❌", "حدث خطأ أثناء حفظ التعديلات.", "error");
+    } else {
+      Swal.fire("تم ✅", "تم تعديل المعاملة بنجاح.", "success");
+      fetchTransactions();
     }
   };
 
@@ -148,14 +247,19 @@ export default function TransactionsPage() {
         type: form.type,
         amount: parseFloat(form.amount),
         note: form.note,
-        date: new Date(),
+        date: form.date,
         leave_day: false,
         absence_day: false,
       },
     ]);
 
     if (!error) {
-      setForm({ type: "bonus", amount: "", note: "" });
+      setForm({
+        type: "bonus",
+        amount: "",
+        note: "",
+        date: new Date().toISOString().split("T")[0],
+      });
       fetchTransactions();
     } else {
       alert("حدث خطأ أثناء إضافة المعاملة.");
@@ -165,6 +269,23 @@ export default function TransactionsPage() {
 
   // إضافة إجازة أو غياب منفصلة
   const addLeaveOrAbsence = async (type) => {
+    // 🗓️ نطلب من المستخدم يختار التاريخ
+    const { value: selectedDate } = await Swal.fire({
+      title: "اختيار التاريخ",
+      input: "date",
+      inputLabel: "اختر تاريخ اليوم المراد تسجيله",
+      inputValue: new Date().toISOString().split("T")[0],
+      showCancelButton: true,
+      confirmButtonText: "تأكيد",
+      cancelButtonText: "إلغاء",
+      confirmButtonColor: "#2563eb",
+      cancelButtonColor: "#d33",
+    });
+
+    if (!selectedDate) {
+      return Swal.fire("تم الإلغاء", "لم يتم اختيار أي تاريخ.", "info");
+    }
+
     const isLeave = type === "leave";
     const { data: leaveDays } = await supabase
       .from("transactions")
@@ -192,7 +313,18 @@ export default function TransactionsPage() {
         }`
       : `هل أنت متأكد أنك تريد تسجيل غياب يوم؟ سيتم خصم ${amountValue} جنيه من الراتب.`;
 
-    if (!confirm(confirmMessage)) return;
+    const { isConfirmed } = await Swal.fire({
+      title: "تأكيد العملية",
+      text: confirmMessage,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "نعم، تأكيد",
+      cancelButtonText: "إلغاء",
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+    });
+
+    if (!isConfirmed) return;
 
     setLoading(true);
     const { error } = await supabase.from("transactions").insert([
@@ -205,7 +337,7 @@ export default function TransactionsPage() {
             ? "إجازة يوم (بدون خصم)"
             : "إجازة يوم (بخصم)"
           : "غياب يوم",
-        date: new Date().toISOString().split("T")[0],
+        date: selectedDate,
         leave_day: isLeave,
         absence_day: !isLeave,
       },
@@ -311,6 +443,7 @@ export default function TransactionsPage() {
                     <th className="p-2 border">النوع</th>
                     <th className="p-2 border">المبلغ</th>
                     <th className="p-2 border">ملاحظات</th>
+                    <th className="p-2 border">التحكم</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -342,6 +475,26 @@ export default function TransactionsPage() {
 
                       <td className="p-2 border">{t.amount.toFixed(2)}</td>
                       <td className="p-2 border">{t.note || "-"}</td>
+                      <td className="p-2 border text-center">
+                        <button
+                          onClick={() => handleEditTransaction(t)}
+                          disabled={t.leave_day || t.absence_day}
+                          className={`mx-2 ${
+                            t.leave_day || t.absence_day
+                              ? "text-gray-400 cursor-not-allowed"
+                              : "text-blue-600 hover:underline"
+                          }`}
+                        >
+                          ✏️ تعديل
+                        </button>
+
+                        <button
+                          onClick={() => handleDeleteTransaction(t.id)}
+                          className="text-red-600 hover:underline mx-2"
+                        >
+                          🗑️ حذف
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -435,6 +588,20 @@ export default function TransactionsPage() {
                   className="w-full border rounded p-2"
                 />
               </div>
+              <div>
+                <label className="block mb-1 font-semibold">
+                  تاريخ المعاملة
+                </label>
+                <input
+                  type="date"
+                  name="date"
+                  value={form.date}
+                  onChange={handleChange}
+                  max={new Date().toISOString().split("T")[0]}
+                  className="w-full border rounded p-2"
+                />
+              </div>
+
               <button
                 type="submit"
                 disabled={loading}
