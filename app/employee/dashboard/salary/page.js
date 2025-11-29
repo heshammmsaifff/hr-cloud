@@ -135,7 +135,7 @@ export default function SalaryPage() {
     // 🟢 تحديد الأيام المستحقة
     let daysWorked = 30;
     if (year === today.getFullYear() && month === today.getMonth() + 1) {
-      daysWorked = today.getDate();
+      daysWorked = today.getDate() - leaveDays;
     }
 
     // 🛑 منع الزيادة بعد تاريخ الأرشفة
