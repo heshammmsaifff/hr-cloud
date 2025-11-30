@@ -38,6 +38,88 @@ export default function TransactionsPage() {
     }
   };
 
+  const deleteTransaction = async (transactionId) => {
+    const confirm = await Swal.fire({
+      title: "هل أنت متأكد؟",
+      text: "سيتم حذف المعاملة نهائياً",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "نعم، حذف",
+      cancelButtonText: "إلغاء",
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    setLoading(true);
+    await supabase.from("transactions").delete().eq("id", transactionId);
+    await fetchTransactions();
+    setLoading(false);
+
+    Swal.fire("تم الحذف", "تم حذف المعاملة بنجاح", "success");
+  };
+
+  const editTransaction = async (transaction) => {
+    if (transaction.leave_day || transaction.absence_day) {
+      return Swal.fire(
+        "غير مسموح",
+        "لا يمكن تعديل الإجازة أو الغياب، مسموح بالحذف فقط",
+        "error"
+      );
+    }
+
+    const { value: formValues } = await Swal.fire({
+      title: "تعديل المعاملة",
+      html: `
+      <select id="swal-type" class="swal2-input">
+        <option value="bonus" ${
+          transaction.type === "bonus" ? "selected" : ""
+        }>علاوة</option>
+        <option value="deduction" ${
+          transaction.type === "deduction" ? "selected" : ""
+        }>خصم</option>
+        <option value="advance" ${
+          transaction.type === "advance" ? "selected" : ""
+        }>سلفة</option>
+      </select>
+      <input id="swal-amount" type="number" class="swal2-input" value="${
+        transaction.amount
+      }">
+      <input id="swal-note" type="text" class="swal2-input" value="${
+        transaction.note || ""
+      }">
+    `,
+      focusConfirm: false,
+      preConfirm: () => {
+        return {
+          type: document.getElementById("swal-type").value,
+          amount: parseFloat(document.getElementById("swal-amount").value),
+          note: document.getElementById("swal-note").value,
+        };
+      },
+      showCancelButton: true,
+      confirmButtonText: "حفظ",
+      cancelButtonText: "إلغاء",
+    });
+
+    if (!formValues) return;
+
+    setLoading(true);
+
+    await supabase
+      .from("transactions")
+      .update({
+        type: formValues.type,
+        amount: formValues.amount,
+        note: formValues.note,
+      })
+      .eq("id", transaction.id);
+
+    await fetchTransactions();
+    setLoading(false);
+
+    Swal.fire("تم التعديل", "تم تحديث المعاملة بنجاح", "success");
+  };
+
   // جلب الراتب الأساسي
   const fetchBaseSalary = async () => {
     const lastDay = new Date(year, month, 0).getDate();
@@ -364,6 +446,7 @@ export default function TransactionsPage() {
                 <th className="p-2 border">النوع</th>
                 <th className="p-2 border">المبلغ</th>
                 <th className="p-2 border">ملاحظات</th>
+                <th className="p-2 border">إجراءات</th>
               </tr>
             </thead>
             <tbody>
@@ -394,6 +477,25 @@ export default function TransactionsPage() {
                   </td>
                   <td className="p-2 border">{t.amount.toFixed(2)}</td>
                   <td className="p-2 border">{t.note || "-"}</td>
+
+                  {/* عمود الاكشن */}
+                  <td className="p-2 border flex gap-2">
+                    {!t.leave_day && !t.absence_day && (
+                      <button
+                        onClick={() => editTransaction(t)}
+                        className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                      >
+                        تعديل
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => deleteTransaction(t.id)}
+                      className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                    >
+                      حذف
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
