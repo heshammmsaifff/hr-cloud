@@ -326,8 +326,22 @@ export default function TransactionsPage() {
 
   if (!employee) return <p className="p-6">⏳ جاري التحميل...</p>;
 
-  const isCurrentMonth =
-    year === today.getFullYear() && month === today.getMonth() + 1;
+  const currentMonth = today.getMonth() + 1;
+  const currentYear = today.getFullYear();
+
+  // هل المستخدم واقف على الشهر السابق؟
+  const isPreviousMonth =
+    (year === currentYear && month === currentMonth - 1) ||
+    (currentMonth === 1 && year === currentYear - 1 && month === 12);
+
+  // صلاحية إضافة معاملات للشهر السابق خلال أول 3 أيام فقط
+  const isPreviousMonthAllowed = isPreviousMonth && today.getDate() <= 3;
+
+  // صلاحية الشهر الحالي (نفس الشروط القديمة)
+  const isCurrentMonth = year === currentYear && month === currentMonth;
+
+  // الشرط النهائي لظهور الفورم
+  const canAddTransactions = isCurrentMonth || isPreviousMonthAllowed;
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white shadow rounded-lg">
@@ -421,7 +435,7 @@ export default function TransactionsPage() {
       </div>
 
       {/* أزرار الغياب والإجازة */}
-      {isCurrentMonth && (
+      {canAddTransactions && (
         <div className="flex gap-4 mb-4">
           <button
             onClick={() => addLeaveOrAbsence("leave")}
@@ -510,7 +524,7 @@ export default function TransactionsPage() {
       )}
 
       {/* فورم إضافة معاملة */}
-      {isCurrentMonth && (
+      {canAddTransactions && (
         <form onSubmit={handleSave} className="space-y-4 mb-6">
           <h2 className="text-lg font-bold mb-2">إضافة معاملة جديدة</h2>
           <select

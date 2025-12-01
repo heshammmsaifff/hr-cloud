@@ -9,6 +9,8 @@ export default function EditEmployee() {
 
   const [employee, setEmployee] = useState(null);
   const [form, setForm] = useState({
+    username: "",
+    password: "",
     name: "",
     phone: "",
     job_title: "",
@@ -16,6 +18,7 @@ export default function EditEmployee() {
     base_salary: "",
     branch: "",
   });
+
   const [loading, setLoading] = useState(false);
 
   const branches = [
@@ -37,6 +40,8 @@ export default function EditEmployee() {
       .from("employees")
       .select(
         `
+        username,
+        password,
         id,
         name,
         phone,
@@ -56,6 +61,8 @@ export default function EditEmployee() {
     if (!error && data) {
       setEmployee(data);
       setForm({
+        username: data.username,
+        password: data.password,
         name: data.name,
         phone: data.phone,
         job_title: data.job_title,
@@ -84,6 +91,8 @@ export default function EditEmployee() {
     const { error: empError } = await supabase
       .from("employees")
       .update({
+        username: form.username,
+        password: form.password,
         name: form.name,
         phone: form.phone,
         job_title: form.job_title,
@@ -134,6 +143,35 @@ export default function EditEmployee() {
       <h1 className="text-2xl font-bold mb-6">تعديل بيانات الموظف</h1>
 
       <form onSubmit={handleSave} className="space-y-4">
+        {/* 🔵 سكشن بيانات تسجيل الدخول */}
+        <div className="border border-blue-300 bg-blue-50 p-4 rounded-lg shadow-sm">
+          <h2 className="font-bold text-lg mb-3 text-blue-700">
+            بيانات تسجيل الدخول
+          </h2>
+
+          <div className="mb-4">
+            <label className="block font-semibold mb-1">اسم المستخدم</label>
+            <input
+              type="text"
+              name="username"
+              value={form.username}
+              onChange={handleChange}
+              className="w-full border rounded-lg p-2 bg-white"
+            />
+          </div>
+
+          <div>
+            <label className="block font-semibold mb-1">كلمة المرور</label>
+            <input
+              type="text"
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              className="w-full border rounded-lg p-2 bg-white"
+            />
+          </div>
+        </div>
+
         <div>
           <label className="block font-semibold mb-1">الاسم</label>
           <input

@@ -7,6 +7,7 @@ export default function EmployeesList() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [branchFilter, setBranchFilter] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const branches = [
     "فاقوس شارع الدروس",
@@ -23,7 +24,7 @@ export default function EmployeesList() {
     let query = supabase
       .from("employees")
       .select("id, name, phone, job_title, hire_date, is_active, branch")
-      .eq("is_active", true); // ✅ عرض الموظفين النشطين فقط
+      .eq("is_active", true);
 
     if (branchFilter) query = query.eq("branch", branchFilter);
     query = query.order("hire_date", { ascending: true });
@@ -45,7 +46,9 @@ export default function EmployeesList() {
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
+
         if (!emp.is_active) return emp;
+
         return {
           ...emp,
           base_salary: salaryHistory?.base_salary || "غير محدد",
@@ -63,7 +66,7 @@ export default function EmployeesList() {
       "هل أنت متأكد أنك تريد نقل هذا الموظف إلى الأرشيف؟"
     );
 
-    if (!confirmDelete) return; // لو المستخدم لغى العملية، نخرج بدون تنفيذ
+    if (!confirmDelete) return;
 
     const { error } = await supabase
       .from("employees")
@@ -85,15 +88,20 @@ export default function EmployeesList() {
 
   if (loading) return <p className="text-center mt-6">جار التحميل...</p>;
 
+  // ⭐ فلترة حسب الاسم
+  const filteredEmployees = employees.filter((emp) =>
+    emp.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
       <h1 className="text-2xl font-bold mb-6 text-blue-700 text-center sm:text-right">
         الموظفون الحاليون
       </h1>
 
-      {/* فلتر الفروع */}
+      {/* فلتر الفروع + بحث الاسم */}
       <div className="mb-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <label className="text-gray-700 font-medium">فلتر الفرع:</label>
+        {/* فلتر الفرع */}
         <select
           value={branchFilter}
           onChange={(e) => setBranchFilter(e.target.value)}
@@ -106,10 +114,19 @@ export default function EmployeesList() {
             </option>
           ))}
         </select>
+
+        {/* 🔍 مربع البحث */}
+        <input
+          type="text"
+          placeholder="ابحث بالاسم..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="border rounded-lg p-2 w-full sm:w-1/3 bg-white shadow-sm focus:ring-2 focus:ring-blue-400"
+        />
       </div>
 
-      {employees.length === 0 ? (
-        <p className="text-center text-gray-500 py-8">لا يوجد موظفون حاليًا</p>
+      {filteredEmployees.length === 0 ? (
+        <p className="text-center text-gray-500 py-8">لا يوجد موظفون</p>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
           <table className="w-full text-sm text-right min-w-[800px]">
@@ -126,7 +143,7 @@ export default function EmployeesList() {
               </tr>
             </thead>
             <tbody>
-              {employees.map((emp) => (
+              {filteredEmployees.map((emp) => (
                 <tr
                   key={emp.id}
                   className="hover:bg-gray-50 transition-colors border-b"
