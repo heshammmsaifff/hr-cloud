@@ -125,6 +125,20 @@ export default function EmployeeDashboard() {
       >
         عرض الراتب
       </Link>
+
+      <div
+        dir="rtl"
+        className="text-right mt-6 p-4 bg-red-50 border border-red-200 rounded"
+      >
+        <h2 className="text-center text-2xl font-extrabold">ملاحظة مهمة</h2>
+        <h3>البرنامج في فترة التجربة و جايز نلاقي أخطاء حسابية</h3>
+        <h3>الأرقام اللي بتظهر دي ممكن يكون فيها غلط</h3>
+        <h3>
+          فلو لاحظت أي حاجة غريبة في الراتب أو الحسابات، ياريت تبلغ الإدارة عشان
+          نصلحها بأسرع وقت ممكن.
+        </h3>
+        <h3 className="font-bold"> شكرًا لتفهمك</h3>
+      </div>
     </div>
   );
 }
