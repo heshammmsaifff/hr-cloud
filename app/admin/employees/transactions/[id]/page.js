@@ -197,9 +197,15 @@ export default function TransactionsPage() {
   deduction += leaveDeduction;
 
   // الأيام المستحقة
-  let daysWorked = WORKING_DAYS_PER_MONTH;
+  let daysWorked;
+
   if (year === today.getFullYear() && month === today.getMonth() + 1) {
+    // الشهر الحالي
     daysWorked = today.getDate() - leaveDays;
+  } else {
+    // أي شهر سابق
+    const daysInMonth = new Date(year, month, 0).getDate();
+    daysWorked = daysInMonth - leaveDays;
   }
 
   // لو الموظف مؤرشف

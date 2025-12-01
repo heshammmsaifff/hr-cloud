@@ -133,9 +133,15 @@ export default function SalaryPage() {
     deduction += leaveDeduction;
 
     // 🟢 تحديد الأيام المستحقة
-    let daysWorked = 30;
+    let daysWorked;
+
     if (year === today.getFullYear() && month === today.getMonth() + 1) {
+      // الشهر الحالي → نحسب لحد النهارده
       daysWorked = today.getDate() - leaveDays;
+    } else {
+      // أي شهر سابق → نحسب عدد أيام الشهر الحقيقي
+      const daysInMonth = new Date(year, month, 0).getDate();
+      daysWorked = daysInMonth - leaveDays;
     }
 
     // 🛑 منع الزيادة بعد تاريخ الأرشفة
