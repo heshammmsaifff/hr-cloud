@@ -136,6 +136,8 @@ export default function AddEmployee() {
           onChange={handleChange}
           className="w-full p-2 border rounded"
         />
+
+        <label>تاريخ التعيين</label>
         <input
           type="date"
           name="hire_date"
