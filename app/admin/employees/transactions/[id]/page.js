@@ -63,7 +63,7 @@ export default function TransactionsPage() {
       return Swal.fire(
         "غير مسموح",
         "لا يمكن تعديل الإجازة أو الغياب، مسموح بالحذف فقط",
-        "error"
+        "error",
       );
     }
 
@@ -154,7 +154,7 @@ export default function TransactionsPage() {
       .gte("date", `${year}-${String(month).padStart(2, "0")}-01`)
       .lte(
         "date",
-        `${year}-${String(month).padStart(2, "0")}-${lastOfMonth.getDate()}`
+        `${year}-${String(month).padStart(2, "0")}-${lastOfMonth.getDate()}`,
       )
       .order("date", { ascending: false });
     setTransactions(data || []);
@@ -236,7 +236,7 @@ export default function TransactionsPage() {
   const handleSave = async (e) => {
     e.preventDefault();
     const confirmed = window.confirm(
-      `هل أنت متأكد من إضافة المعاملة؟\nنوع: ${form.type}\nالمبلغ: ${form.amount}\nملاحظة: ${form.note}`
+      `هل أنت متأكد من إضافة المعاملة؟\nنوع: ${form.type}\nالمبلغ: ${form.amount}\nملاحظة: ${form.note}`,
     );
     if (!confirmed) return;
 
@@ -278,25 +278,34 @@ export default function TransactionsPage() {
     if (!selectedDate) return;
 
     const isLeave = type === "leave";
+
+    // عدد أيام الإجازة في الشهر
     const leaveCount = transactions.filter(
       (t) =>
         t.leave_day &&
         new Date(t.date).getMonth() + 1 === month &&
-        new Date(t.date).getFullYear() === year
+        new Date(t.date).getFullYear() === year,
     ).length;
-    const amountValue = isLeave
-      ? leaveCount < 4
-        ? 0
-        : dailySalary
-      : dailySalary;
+
+    // ❌ منع الإجازة الخامسة
+    if (isLeave && leaveCount >= 4) {
+      await Swal.fire({
+        icon: "warning",
+        title: "تم استهلاك الإجازات",
+        text: "تم استهلاك 4 أيام إجازة، برجاء تسجيل غياب يوم",
+        confirmButtonText: "حسنًا",
+      });
+      return;
+    }
+
+    // المبلغ (الإجازة بدون خصم – الغياب بخصم يوم)
+    const amountValue = isLeave ? 0 : dailySalary;
 
     const { isConfirmed } = await Swal.fire({
       title: "تأكيد العملية",
       text: isLeave
-        ? `تسجيل إجازة يوم${
-            leaveCount < 4 ? " (بدون خصم)" : ` سيتم خصم ${amountValue} جنيه`
-          }`
-        : `تسجيل غياب يوم، سيتم خصم ${amountValue} جنيه`,
+        ? "تسجيل إجازة يوم (بدون خصم)"
+        : `تسجيل غياب يوم، سيتم خصم ${dailySalary} جنيه`,
       icon: "question",
       showCancelButton: true,
       confirmButtonText: "نعم، تأكيد",
@@ -305,21 +314,19 @@ export default function TransactionsPage() {
     if (!isConfirmed) return;
 
     setLoading(true);
+
     await supabase.from("transactions").insert([
       {
         employee_id: id,
         type: null,
         amount: amountValue,
-        note: isLeave
-          ? leaveCount < 4
-            ? "إجازة يوم (بدون خصم)"
-            : "إجازة يوم (بخصم)"
-          : "غياب يوم",
+        note: isLeave ? "إجازة يوم" : "غياب يوم",
         date: selectedDate,
         leave_day: isLeave,
         absence_day: !isLeave,
       },
     ]);
+
     fetchTransactions();
     setLoading(false);
   };
@@ -486,14 +493,14 @@ export default function TransactionsPage() {
                     {t.leave_day
                       ? "إجازة يوم"
                       : t.absence_day
-                      ? "غياب يوم"
-                      : t.type === "bonus"
-                      ? "علاوة"
-                      : t.type === "deduction"
-                      ? "خصم"
-                      : t.type === "advance"
-                      ? "سلفة"
-                      : "-"}
+                        ? "غياب يوم"
+                        : t.type === "bonus"
+                          ? "علاوة"
+                          : t.type === "deduction"
+                            ? "خصم"
+                            : t.type === "advance"
+                              ? "سلفة"
+                              : "-"}
                   </td>
                   <td className="p-2 border">{t.amount.toFixed(2)}</td>
                   <td className="p-2 border">{t.note || "-"}</td>
