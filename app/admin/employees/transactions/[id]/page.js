@@ -547,7 +547,7 @@ export default function TransactionsPage() {
                   {transactions.map((t, idx) => (
                     <tr key={t.id} className="hover:bg-slate-50/50 transition">
                       <td className="p-3 text-slate-500 font-mono">
-                        {new Date(t.date).toLocaleDateString("ar-EG")}
+                        {new Date(t.date).toLocaleDateString("en-GB")}
                       </td>
                       <td className="p-3">
                         {t.leave_day ? (

@@ -94,7 +94,7 @@ export default function EmployeesList() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto p-6 bg-slate-50 min-h-screen font-sans" dir="rtl">
+    <div className="max-w-7xl mx-auto p-6 bg-slate-50 min-h-screen font-sans">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 border-b pb-6 border-slate-200">
         <div>
@@ -195,7 +195,7 @@ export default function EmployeesList() {
                     <td className="p-4 sm:p-5 text-slate-600 font-medium">{emp.job_title}</td>
                     <td className="p-4 sm:p-5 text-slate-500 font-mono">{emp.phone}</td>
                     <td className="p-4 sm:p-5 text-slate-500">
-                      {new Date(emp.hire_date).toLocaleDateString("ar-EG")}
+                      {new Date(emp.hire_date).toLocaleDateString("en-GB")}
                     </td>
                     <td className="p-4 sm:p-5">
                       <span className="text-emerald-700 bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-full font-extrabold">
@@ -206,7 +206,7 @@ export default function EmployeesList() {
                     </td>
                     <td className="p-4 sm:p-5 text-slate-400 font-medium">
                       {emp.salary_updated_at
-                        ? new Date(emp.salary_updated_at).toLocaleDateString("ar-EG")
+                        ? new Date(emp.salary_updated_at).toLocaleDateString("en-GB")
                         : "—"}
                     </td>
                     <td className="p-4 sm:p-5">

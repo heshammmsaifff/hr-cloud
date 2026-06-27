@@ -117,7 +117,7 @@ export default function ArchivedEmployees() {
                     <td className="p-4 sm:p-5 text-slate-600 font-medium">{emp.job_title}</td>
                     <td className="p-4 sm:p-5 text-slate-500 font-mono">{emp.phone}</td>
                     <td className="p-4 sm:p-5 text-slate-500">
-                      {new Date(emp.hire_date).toLocaleDateString("ar-EG")}
+                      {new Date(emp.hire_date).toLocaleDateString("en-GB")}
                     </td>
                     <td className="p-4 sm:p-5">
                       <div className="flex gap-2 justify-center">
