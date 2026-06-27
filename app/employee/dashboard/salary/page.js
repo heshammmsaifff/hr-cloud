@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabase";
+import Link from "next/link";
 
 export default function SalaryPage() {
   const today = new Date();
@@ -184,157 +185,248 @@ export default function SalaryPage() {
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6 text-blue-700">الراتب الشهري</h1>
-
-      <div className="flex gap-4 mb-6">
-        <select
-          value={month}
-          onChange={(e) => setMonth(Number(e.target.value))}
-          className="border rounded p-2 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+    <div className="max-w-6xl mx-auto p-6 bg-slate-50 min-h-screen font-sans text-right" dir="rtl">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 border-b pb-6 border-slate-200">
+        <div>
+          <h1 className="text-3xl font-black text-slate-800">كشف الراتب الشهري 📊</h1>
+          <p className="text-slate-500 mt-1">
+            مراجعة كافة مستحقاتك، علاواتك، وخصوماتك لشهر <span className="font-bold text-blue-600">{month}</span> لسنة <span className="font-bold text-blue-600">{year}</span>
+          </p>
+        </div>
+        <Link
+          href="/employee/dashboard"
+          className="mt-4 sm:mt-0 flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-slate-800 transition"
         >
-          {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-            <option key={m} value={m}>
-              {m}
-            </option>
-          ))}
-        </select>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          العودة لبوابة الموظف
+        </Link>
+      </div>
 
-        <select
-          value={year}
-          onChange={(e) => setYear(Number(e.target.value))}
-          className="border rounded p-2 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-        >
-          {[2024, 2025, 2026].map((y) => (
-            <option key={y} value={y}>
-              {y}
-            </option>
-          ))}
-        </select>
+      {/* Date Selectors */}
+      <div className="mb-6 flex gap-4 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-bold text-slate-600">الشهر:</label>
+          <select
+            value={month}
+            onChange={(e) => setMonth(Number(e.target.value))}
+            className="border border-slate-200 rounded-xl p-2 bg-white font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+          >
+            {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-bold text-slate-600">السنة:</label>
+          <select
+            value={year}
+            onChange={(e) => setYear(Number(e.target.value))}
+            className="border border-slate-200 rounded-xl p-2 bg-white font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+          >
+            {[2024, 2025, 2026].map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {salaryData ? (
-        <div className="space-y-4">
-          <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200">
-            <div
-              dir="rtl"
-              className="text-right mt-6 p-4 bg-red-50 border border-red-200 rounded"
-            >
-              <h2 className="text-center text-2xl font-extrabold">
-                ملاحظة مهمة
-              </h2>
-              <h3>البرنامج في فترة التجربة و جايز نلاقي أخطاء حسابية</h3>
-              <h3>الأرقام اللي بتظهر دي ممكن يكون فيها غلط</h3>
-              <h3>
-                فلو لاحظت أي حاجة غريبة في الراتب أو الحسابات، ياريت تبلغ
-                الإدارة عشان نصلحها بأسرع وقت ممكن.
-              </h3>
-              <h3 className="font-bold">شكرًا لتفهمك</h3>
+        <div className="space-y-6">
+          {/* KPI Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Base Salary */}
+            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-slate-400">الراتب الأساسي</p>
+                <p className="text-2xl font-black text-slate-800 mt-1">{salaryData.baseSalary.toFixed(2)} ج.م</p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-650 flex items-center justify-center font-bold text-lg">
+                💵
+              </div>
             </div>
-            <p className="text-gray-700">
-              الراتب الأساسي:{" "}
-              <span className="font-semibold">
-                {salaryData.baseSalary.toFixed(2)} جنيه
-              </span>
-            </p>
-            <p className="text-gray-700">
-              الأجر اليومي:{" "}
-              <span className="font-semibold">
-                {salaryData.dailyRate.toFixed(2)} جنيه
-              </span>
-            </p>
-            <p className="text-gray-700">
-              المستحق حتى الآن:{" "}
-              <span className="font-semibold">
-                {salaryData.earnedSalary.toFixed(2)} جنيه
-              </span>
-            </p>
-            <p className="text-green-600">
-              إضافات:{" "}
-              <span className="font-semibold">
-                {salaryData.bonus.toFixed(2)} جنيه
-              </span>
-            </p>
-            <p className="text-red-600">
-              خصومات عادية:{" "}
-              <span className="font-semibold">
-                {(
-                  salaryData.deduction -
-                  salaryData.leaveDeduction -
-                  salaryData.absenceDeduction
-                ).toFixed(2)}{" "}
-                جنيه
-              </span>
-            </p>
-            <p className="text-red-600">
-              خصومات إجازة:{" "}
-              <span className="font-semibold">
-                {salaryData.leaveDeduction.toFixed(2)} جنيه
-              </span>
-            </p>
-            <p className="text-red-600">
-              خصومات غياب:{" "}
-              <span className="font-semibold">
-                {salaryData.absenceDeduction.toFixed(2)} جنيه
-              </span>
-            </p>
-            <p className="text-orange-500">
-              سلف:{" "}
-              <span className="font-semibold">
-                {salaryData.advance.toFixed(2)} جنيه
-              </span>
-            </p>
-            <hr className="my-2 border-gray-300" />
-            <p className="font-bold text-lg text-blue-700">
-              الصافي: {salaryData.netSalary.toFixed(2)} جنيه
-            </p>
+
+            {/* Daily Rate */}
+            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-slate-400">الأجر اليومي (26 يوم)</p>
+                <p className="text-2xl font-black text-slate-800 mt-1">{salaryData.dailyRate.toFixed(2)} ج.م</p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-650 flex items-center justify-center font-bold text-lg">
+                📅
+              </div>
+            </div>
+
+            {/* Earned Salary */}
+            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-slate-400">المستحق الفعلي حتى الآن</p>
+                <p className="text-2xl font-black text-slate-800 mt-1">{salaryData.earnedSalary.toFixed(2)} ج.م</p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-650 flex items-center justify-center font-bold text-lg">
+                ✓
+              </div>
+            </div>
+
+            {/* Bonus */}
+            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-slate-400">إجمالي العلاوات</p>
+                <p className="text-2xl font-black text-emerald-600 mt-1">+{salaryData.bonus.toFixed(2)} ج.م</p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-green-50 text-green-650 flex items-center justify-center font-bold text-lg">
+                📈
+              </div>
+            </div>
+
+            {/* Normal Deductions */}
+            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-slate-400">خصومات عادية</p>
+                <p className="text-2xl font-black text-rose-600 mt-1">
+                  -{(
+                    salaryData.deduction -
+                    salaryData.leaveDeduction -
+                    salaryData.absenceDeduction
+                  ).toFixed(2)}{" "}
+                  ج.م
+                </p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-650 flex items-center justify-center font-bold text-lg">
+                📉
+              </div>
+            </div>
+
+            {/* Leave Deductions */}
+            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-slate-400">خصومات إجازة</p>
+                <p className="text-2xl font-black text-rose-600 mt-1">-{salaryData.leaveDeduction.toFixed(2)} ج.م</p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-650 flex items-center justify-center font-bold text-lg">
+                🌴
+              </div>
+            </div>
+
+            {/* Absence Deductions */}
+            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-slate-400">خصومات غياب</p>
+                <p className="text-2xl font-black text-rose-600 mt-1">-{salaryData.absenceDeduction.toFixed(2)} ج.م</p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-650 flex items-center justify-center font-bold text-lg">
+                ❌
+              </div>
+            </div>
+
+            {/* Advances */}
+            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex items-center justify-between">
+              <div>
+                <p className="text-xs font-bold text-slate-400">إجمالي السلف</p>
+                <p className="text-2xl font-black text-amber-600 mt-1">-{salaryData.advance.toFixed(2)} ج.م</p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-650 flex items-center justify-center font-bold text-lg">
+                💸
+              </div>
+            </div>
+
+            {/* Net Salary (Highlight) */}
+            <div className={`col-span-1 sm:col-span-2 lg:col-span-4 rounded-2xl border p-5 shadow-sm flex items-center justify-between transition ${salaryData.netSalary >= 0 ? "bg-emerald-600 text-white border-emerald-600" : "bg-rose-600 text-white border-rose-600"}`}>
+              <div>
+                <p className="text-xs font-bold opacity-80">الصافي النهائي المستحق الدفع</p>
+                <p className="text-3xl font-black mt-1.5">{salaryData.netSalary.toFixed(2)} ج.م</p>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl font-bold">
+                💰
+              </div>
+            </div>
           </div>
 
-          {salaryData.transactions?.length === 0 ? (
-            <p className="text-gray-500">لا توجد معاملات لهذا الشهر</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-right border-collapse shadow-md rounded-lg overflow-hidden">
-                <thead>
-                  <tr className="bg-blue-100 text-blue-800">
-                    <th className="p-3 border-b">التاريخ</th>
-                    <th className="p-3 border-b">النوع</th>
-                    <th className="p-3 border-b">المبلغ</th>
-                    <th className="p-3 border-b">ملاحظة</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {salaryData.transactions.map((t, idx) => (
-                    <tr
-                      key={t.id}
-                      className={
-                        idx % 2 === 0
-                          ? "bg-gray-50 hover:bg-gray-100"
-                          : "bg-white hover:bg-gray-100"
-                      }
-                    >
-                      <td className="p-2 border-b">
-                        {new Date(t.date).toLocaleDateString("ar-EG")}
-                      </td>
-                      <td className="p-2 border-b">
-                        {translateType(t.type, t.leave_day, t.absence_day)}
-                      </td>
-                      <td className="p-2 border-b">{t.amount.toFixed(2)}</td>
-                      <td className="p-2 border-b">{t.note || "-"}</td>
+          {/* Transactions List */}
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 overflow-hidden">
+            <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+              تفاصيل العمليات المسجلة لشهر {month}/{year}
+            </h2>
+
+            {salaryData.transactions?.length === 0 ? (
+              <p className="text-slate-400 text-center py-6 font-medium">لا توجد معاملات مسجلة لهذا الشهر.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-right border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-600 border-b border-slate-100 text-xs font-bold">
+                      <th className="p-3">التاريخ</th>
+                      <th className="p-3">النوع</th>
+                      <th className="p-3">المبلغ</th>
+                      <th className="p-3">ملاحظات الإدارة</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-xs">
+                    {salaryData.transactions.map((t, idx) => (
+                      <tr key={t.id} className="hover:bg-slate-50/50 transition">
+                        <td className="p-3 text-slate-500 font-mono">
+                          {new Date(t.date).toLocaleDateString("ar-EG")}
+                        </td>
+                        <td className="p-3">
+                          {t.leave_day ? (
+                            <span className="text-amber-700 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full font-bold">إجازة يوم</span>
+                          ) : t.absence_day ? (
+                            <span className="text-rose-700 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded-full font-bold">غياب يوم</span>
+                          ) : t.type === "bonus" ? (
+                            <span className="text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full font-bold">علاوة</span>
+                          ) : t.type === "deduction" ? (
+                            <span className="text-red-700 bg-red-50 border border-red-100 px-2 py-0.5 rounded-full font-bold">خصم</span>
+                          ) : t.type === "advance" ? (
+                            <span className="text-purple-700 bg-purple-50 border border-purple-100 px-2 py-0.5 rounded-full font-bold">سلفة</span>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
+                        <td className="p-3 font-bold text-slate-700">
+                          {t.amount.toFixed(2)} ج.م
+                        </td>
+                        <td className="p-3 text-slate-600 font-medium">{t.note || "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       ) : (
-        <p className="text-gray-500">
-          {isArchived
-            ? "هذا الموظف مؤرشف ولا يتم احتساب راتبه بعد تاريخ الأرشفة"
-            : "لا توجد بيانات لهذا الشهر"}
-        </p>
+        <div className="bg-white rounded-3xl p-12 text-center border border-slate-100 shadow-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-slate-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <p className="text-slate-500 text-lg font-medium">
+            {isArchived
+              ? "هذا الحساب مؤرشف، ولا يتم احتساب الرواتب للحسابات المؤرشفة."
+              : "لا توجد بيانات مسجلة لهذا الشهر."}
+          </p>
+        </div>
       )}
+
+      {/* Notice Box */}
+      <div className="mt-8 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm text-xs leading-relaxed">
+        <h2 className="font-black text-sm mb-1.5 text-amber-900">⚠️ تنبيه بشأن تشغيل النظام:</h2>
+        <p className="mb-1 text-slate-500 font-medium">هذا النظام يمر بفترة اختبار حالية وقد تظهر بعض الاختلافات الحسابية.</p>
+        <p className="font-semibold text-slate-700">إذا لاحظت أي مشكلة أو بيانات غير صحيحة، نرجو منك إعلام الإدارة مباشرة لمراجعتها وتصحيحه.</p>
+      </div>
     </div>
   );
 }

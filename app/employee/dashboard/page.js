@@ -89,55 +89,95 @@ export default function EmployeeDashboard() {
 
   if (!employee) return null;
 
+  const handleLogout = () => {
+    localStorage.removeItem("employee");
+    router.push("/employee/login");
+  };
+
   return (
-    <div className="max-w-lg mx-auto mt-10 p-6 bg-white rounded-2xl shadow">
-      <h1 className="text-2xl font-bold mb-4">مرحبًا {employee.name} 👋</h1>
-      <p className="mb-2">
-        <strong>اسم المستخدم:</strong> {employee.username}
-      </p>
-      <p className="mb-2">
-        <strong>الوظيفة:</strong> {employee.job_title}
-      </p>
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans text-right" dir="rtl">
+      {/* Decorative background shapes */}
+      <div className="absolute top-[-10%] left-[-10%] w-[350px] h-[350px] rounded-full bg-blue-100/50 blur-[80px] opacity-60"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[350px] h-[350px] rounded-full bg-purple-100/50 blur-[80px] opacity-60"></div>
 
-      {/* حالة المؤرشف */}
-      {isArchived ? (
-        <div className="p-3 rounded border bg-yellow-50 text-sm text-yellow-800">
-          هذا الحساب مؤرشف — لا يتم تحديث الراتب بعد تاريخ الأرشفة.
+      <div className="max-w-xl mx-auto w-full z-10">
+        {/* Profile Card */}
+        <div className="bg-white py-8 px-6 shadow-xl rounded-3xl border border-slate-100 sm:px-10 overflow-hidden relative">
+          
+          {/* Top Actions: Logout */}
+          <div className="flex justify-between items-center mb-6 border-b pb-4">
+            <span className="text-xs bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-bold">بوابة الموظف 👤</span>
+            <button
+              onClick={handleLogout}
+              className="text-xs font-bold text-rose-600 hover:text-rose-700 transition flex items-center gap-1"
+            >
+              تسجيل الخروج
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
+          </div>
+
+          {/* User Info Header with Avatar */}
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center text-2xl">
+              👨‍💼
+            </div>
+            <div>
+              <h1 className="text-2xl font-black text-slate-800">مرحبًا، {employee.name} 👋</h1>
+              <p className="text-slate-400 text-sm mt-0.5">{employee.job_title}</p>
+            </div>
+          </div>
+
+          <div className="space-y-4 mb-6 text-sm text-slate-600 bg-slate-50 p-4 rounded-2xl">
+            <p className="flex justify-between">
+              <span className="font-bold text-slate-500">اسم المستخدم:</span>
+              <span className="font-semibold text-slate-800">{employee.username}</span>
+            </p>
+            <p className="flex justify-between">
+              <span className="font-bold text-slate-500">الوظيفة الحالية:</span>
+              <span className="font-semibold text-slate-800">{employee.job_title}</span>
+            </p>
+          </div>
+
+          {/* Salary Block */}
+          <div className="mb-6 p-5 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl text-white shadow-md">
+            <p className="text-xs font-bold opacity-80">الراتب الأساسي الحالي</p>
+            {isArchived ? (
+              <div className="mt-2 text-sm font-bold text-amber-250 flex items-center gap-1.5">
+                ⚠️ هذا الحساب مؤرشف — لا يتم تحديث الراتب بعد تاريخ الأرشفة.
+              </div>
+            ) : (
+              <p className="text-2xl font-black mt-1">
+                {loadingSalary ? (
+                  <span className="text-sm font-normal">جاري التحميل...</span>
+                ) : salary !== null ? (
+                  `${salary.toFixed(2)} ج.م`
+                ) : (
+                  "لم يتم تحديد راتب بعد"
+                )}
+              </p>
+            )}
+          </div>
+
+          <Link
+            href="/employee/dashboard/salary"
+            className={`w-full py-3.5 px-4 text-center rounded-2xl shadow-sm font-bold transition flex items-center justify-center gap-1.5 ${
+              isArchived
+                ? "bg-slate-200 text-slate-400 cursor-not-allowed pointer-events-none"
+                : "bg-blue-600 hover:bg-blue-700 text-white"
+            }`}
+          >
+            📊 عرض تفاصيل الراتب والمعاملات
+          </Link>
+
+          {/* Notice Box */}
+          <div className="mt-8 p-4 bg-amber-50 border border-amber-100 rounded-2xl text-amber-800 text-xs leading-relaxed">
+            <h2 className="font-black text-sm mb-1.5 text-amber-900">⚠️ ملاحظة هامة جداً:</h2>
+            <p className="mb-1">نحن في فترة تشغيل تجريبية للبرنامج، لذا قد تحتوي بعض الحسابات على أخطاء حسابية غير مقصودة.</p>
+            <p className="font-semibold">إذا لاحظت أي اختلاف أو خطأ في مستحقاتك المالية أو الإجازات، يرجى إخطار المحاسب فوراً لمراجعة حسابك وتصحيحه بأسرع وقت.</p>
+          </div>
         </div>
-      ) : (
-        <p className="mb-2">
-          <strong>الراتب الأساسي الحالي:</strong>{" "}
-          {loadingSalary
-            ? "جارٍ التحميل..."
-            : salary !== null
-            ? `${salary} جنيه`
-            : "لم يتم تحديد راتب بعد"}
-        </p>
-      )}
-
-      <Link
-        href="/employee/dashboard/salary"
-        className={`inline-block mt-4 px-4 py-2 rounded-lg shadow ${
-          isArchived
-            ? "bg-gray-300 text-gray-700 pointer-events-none"
-            : "bg-blue-600 text-white hover:bg-blue-700"
-        }`}
-      >
-        عرض الراتب
-      </Link>
-
-      <div
-        dir="rtl"
-        className="text-right mt-6 p-4 bg-red-50 border border-red-200 rounded"
-      >
-        <h2 className="text-center text-2xl font-extrabold">ملاحظة مهمة</h2>
-        <h3>البرنامج في فترة التجربة و جايز نلاقي أخطاء حسابية</h3>
-        <h3>الأرقام اللي بتظهر دي ممكن يكون فيها غلط</h3>
-        <h3>
-          فلو لاحظت أي حاجة غريبة في الراتب أو الحسابات، ياريت تبلغ الإدارة عشان
-          نصلحها بأسرع وقت ممكن.
-        </h3>
-        <h3 className="font-bold"> شكرًا لتفهمك</h3>
       </div>
     </div>
   );

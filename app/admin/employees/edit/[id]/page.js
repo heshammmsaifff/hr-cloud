@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../../lib/supabase";
+import Link from "next/link";
 
 export default function EditEmployee() {
   const { id } = useParams();
@@ -136,122 +137,174 @@ export default function EditEmployee() {
     router.push("/admin/employees");
   };
 
-  if (!employee) return <div className="p-8 text-white">جاري التحميل...</div>;
+  if (!employee) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 font-sans" dir="rtl">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-slate-600 font-semibold text-lg">جاري تحميل بيانات الموظف...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-2xl mx-auto p-8">
-      <h1 className="text-2xl font-bold mb-6">تعديل بيانات الموظف</h1>
+    <div className="max-w-3xl mx-auto p-6 bg-slate-50 min-h-screen font-sans" dir="rtl">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8 border-b pb-6 border-slate-200">
+        <div>
+          <h1 className="text-3xl font-black text-slate-800">تعديل بيانات الموظف ✏️</h1>
+          <p className="text-slate-500 mt-1">تحديث الملف الشخصي أو تعديل الراتب والفرع للموظف {employee.name}.</p>
+        </div>
+        <Link
+          href="/admin/employees"
+          className="flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-slate-800 transition"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          العودة لقائمة الموظفين
+        </Link>
+      </div>
 
-      <form onSubmit={handleSave} className="space-y-4">
-        {/* 🔵 سكشن بيانات تسجيل الدخول */}
-        <div className="border border-blue-300 bg-blue-50 p-4 rounded-lg shadow-sm">
-          <h2 className="font-bold text-lg mb-3 text-blue-700">
-            بيانات تسجيل الدخول
+      <form onSubmit={handleSave} className="space-y-6">
+        {/* Account Info Card */}
+        <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-3">
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+            بيانات الحساب (تسجيل الدخول)
           </h2>
-
-          <div className="mb-4">
-            <label className="block font-semibold mb-1">اسم المستخدم</label>
-            <input
-              type="text"
-              name="username"
-              value={form.username}
-              onChange={handleChange}
-              className="w-full border rounded-lg p-2 bg-white"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">اسم المستخدم</label>
+              <input
+                type="text"
+                name="username"
+                value={form.username}
+                onChange={handleChange}
+                className="w-full p-3 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm font-medium"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">كلمة المرور</label>
+              <input
+                type="text"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                className="w-full p-3 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm font-medium"
+                required
+              />
+            </div>
           </div>
+        </div>
 
-          <div>
-            <label className="block font-semibold mb-1">كلمة المرور</label>
-            <input
-              type="text"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              className="w-full border rounded-lg p-2 bg-white"
-            />
+        {/* Personal & Job Info Card */}
+        <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2 border-b pb-3">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            البيانات الشخصية والوظيفية
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">الاسم</label>
+              <input
+                type="text"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                className="w-full p-3 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm font-medium"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">رقم الموبايل</label>
+              <input
+                type="text"
+                name="phone"
+                value={form.phone}
+                onChange={handleChange}
+                className="w-full p-3 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm font-medium font-mono"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">الوظيفة</label>
+              <input
+                type="text"
+                name="job_title"
+                value={form.job_title}
+                onChange={handleChange}
+                className="w-full p-3 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm font-medium"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">الراتب الحالي</label>
+              <input
+                type="number"
+                name="base_salary"
+                value={form.base_salary}
+                onChange={handleChange}
+                className="w-full p-3 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm font-medium"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">الفرع</label>
+              <select
+                name="branch"
+                value={form.branch}
+                onChange={handleChange}
+                className="w-full p-3 border border-slate-200 rounded-2xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm font-bold text-slate-700"
+                required
+              >
+                <option value="">اختر الفرع</option>
+                {branches.map((b, i) => (
+                  <option key={i} value={b}>
+                    {b}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">حالة الحساب</label>
+              <select
+                name="is_active"
+                value={form.is_active}
+                onChange={handleChange}
+                className="w-full p-3 border border-slate-200 rounded-2xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm font-bold text-slate-700"
+                required
+              >
+                <option value="true">نشط (يعمل بالشركة)</option>
+                <option value="false">غير نشط (مؤرشف)</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        <div>
-          <label className="block font-semibold mb-1">الاسم</label>
-          <input
-            type="text"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-2"
-          />
-        </div>
-
-        <div>
-          <label className="block font-semibold mb-1">الموبايل</label>
-          <input
-            type="text"
-            name="phone"
-            value={form.phone}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-2"
-          />
-        </div>
-
-        <div>
-          <label className="block font-semibold mb-1">الوظيفة</label>
-          <input
-            type="text"
-            name="job_title"
-            value={form.job_title}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-2"
-          />
-        </div>
-
-        <div>
-          <label className="block font-semibold mb-1">الراتب الحالي</label>
-          <input
-            type="number"
-            name="base_salary"
-            value={form.base_salary}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-2"
-          />
-        </div>
-
-        <div>
-          <label className="block font-semibold mb-1">الفرع</label>
-          <select
-            name="branch"
-            value={form.branch}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-2"
-          >
-            <option value="">اختر الفرع</option>
-            {branches.map((b, i) => (
-              <option key={i} value={b}>
-                {b}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block font-semibold mb-1">نشط</label>
-          <select
-            name="is_active"
-            value={form.is_active}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-2"
-          >
-            <option value="true">نعم</option>
-            <option value="false">لا</option>
-          </select>
-        </div>
-
+        {/* Submit */}
         <button
           type="submit"
           disabled={loading}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-700 disabled:opacity-50"
+          className="w-full py-4 border border-transparent rounded-2xl shadow-sm text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 disabled:opacity-50"
         >
-          {loading ? "جارٍ الحفظ..." : "حفظ"}
+          {loading ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              جاري حفظ التعديلات...
+            </div>
+          ) : (
+            "حفظ التغييرات"
+          )}
         </button>
       </form>
     </div>

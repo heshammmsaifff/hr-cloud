@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "../../../../lib/supabase";
 import Swal from "sweetalert2";
+import Link from "next/link";
 
 export default function TransactionsPage() {
   const { id } = useParams();
@@ -351,233 +352,320 @@ export default function TransactionsPage() {
   const canAddTransactions = isCurrentMonth || isPreviousMonthAllowed;
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white shadow rounded-lg">
-      <h1 className="text-2xl font-bold mb-4 text-blue-700">
-        المعاملات المالية: {employee.name} ({employee.job_title})
-      </h1>
-
-      {/* اختيار الشهر والسنة */}
-      <div className="flex gap-4 mb-4">
-        <select
-          value={month}
-          onChange={(e) => setMonth(Number(e.target.value))}
-          className="border rounded p-2 bg-white shadow-sm"
+    <div className="max-w-6xl mx-auto p-6 bg-slate-50 min-h-screen font-sans" dir="rtl">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 border-b pb-6 border-slate-200">
+        <div>
+          <h1 className="text-3xl font-black text-slate-800">المعاملات المالية 💸</h1>
+          <p className="text-slate-500 mt-1">
+            إدارة مستحقات الموظف: <span className="font-bold text-blue-600">{employee.name}</span> ({employee.job_title})
+            {isArchived && <span className="mr-2 text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">حساب مؤرشف</span>}
+          </p>
+        </div>
+        <Link
+          href="/admin/employees"
+          className="mt-4 sm:mt-0 flex items-center gap-1.5 text-sm font-semibold text-slate-500 hover:text-slate-800 transition"
         >
-          {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-            <option key={m} value={m}>
-              {m}
-            </option>
-          ))}
-        </select>
-        <select
-          value={year}
-          onChange={(e) => setYear(Number(e.target.value))}
-          className="border rounded p-2 bg-white shadow-sm"
-        >
-          {[2024, 2025, 2026].map((y) => (
-            <option key={y} value={y}>
-              {y}
-            </option>
-          ))}
-        </select>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          العودة لقائمة الموظفين
+        </Link>
       </div>
 
-      {/* الملخص */}
-      <div className="bg-gray-50 p-3 rounded border mb-4">
-        <p>
-          💰 الراتب الأساسي:{" "}
-          <span className="font-bold text-blue-700">
-            {baseSalary.toFixed(2)}
-          </span>
-        </p>
-        <p>
-          💰 الأجر اليومي:{" "}
-          <span className="font-bold text-blue-700">
-            {dailySalary.toFixed(2)}
-          </span>
-        </p>
-        <p>
-          💰 المستحق حتى الآن:{" "}
-          <span className="font-bold text-green-700">
-            {earnedSalary.toFixed(2)}
-          </span>
-        </p>
-        <p>
-          ✅ إجمالي العلاوات:{" "}
-          <span className="font-bold text-green-600">{bonus.toFixed(2)}</span>
-        </p>
-        <p>
-          ❌ إجمالي الخصومات:{" "}
-          <span className="font-bold text-red-600">{deduction.toFixed(2)}</span>
-        </p>
-        <p>
-          ❌ إجمالي خصومات إجازة:{" "}
-          <span className="font-bold text-red-600">
-            {leaveDeduction.toFixed(2)}
-          </span>
-        </p>
-        <p>
-          ❌ إجمالي خصومات غياب:{" "}
-          <span className="font-bold text-red-600">
-            {absenceDeduction.toFixed(2)}
-          </span>
-        </p>
-        <p>
-          💰 إجمالي السلف:{" "}
-          <span className="font-bold text-yellow-600">
-            {advance.toFixed(2)}
-          </span>
-        </p>
-        <hr className="my-2 border-gray-300" />
-        <p>
-          🔵 صافي الراتب بعد المعاملات:{" "}
-          <span
-            className={`font-bold ${
-              netSalary >= 0 ? "text-green-700" : "text-red-700"
-            }`}
-          >
-            {netSalary.toFixed(2)}
-          </span>
-        </p>
-      </div>
-
-      {/* أزرار الغياب والإجازة */}
-      {canAddTransactions && (
-        <div className="flex gap-4 mb-4">
-          <button
-            onClick={() => addLeaveOrAbsence("leave")}
-            disabled={loading}
-            className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 disabled:opacity-50"
-          >
-            تسجيل إجازة يوم
-          </button>
-          <button
-            onClick={() => addLeaveOrAbsence("absence")}
-            disabled={loading}
-            className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 disabled:opacity-50"
-          >
-            تسجيل غياب يوم
-          </button>
-        </div>
-      )}
-
-      {/* جدول المعاملات */}
-      {transactions.length === 0 ? (
-        <p className="text-gray-500 mb-4">لا توجد معاملات مسجلة لهذا الشهر</p>
-      ) : (
-        <div className="overflow-x-auto mb-4">
-          <table className="w-full border border-gray-200 text-right rounded-lg overflow-hidden">
-            <thead>
-              <tr className="bg-blue-100 text-blue-800">
-                <th className="p-2 border">التاريخ</th>
-                <th className="p-2 border">النوع</th>
-                <th className="p-2 border">المبلغ</th>
-                <th className="p-2 border">ملاحظات</th>
-                <th className="p-2 border">إجراءات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map((t, idx) => (
-                <tr
-                  key={t.id}
-                  className={
-                    idx % 2 === 0
-                      ? "bg-gray-50 hover:bg-gray-100"
-                      : "bg-white hover:bg-gray-100"
-                  }
-                >
-                  <td className="p-2 border">
-                    {new Date(t.date).toLocaleDateString("ar-EG")}
-                  </td>
-                  <td className="p-2 border">
-                    {t.leave_day
-                      ? "إجازة يوم"
-                      : t.absence_day
-                        ? "غياب يوم"
-                        : t.type === "bonus"
-                          ? "علاوة"
-                          : t.type === "deduction"
-                            ? "خصم"
-                            : t.type === "advance"
-                              ? "سلفة"
-                              : "-"}
-                  </td>
-                  <td className="p-2 border">{t.amount.toFixed(2)}</td>
-                  <td className="p-2 border">{t.note || "-"}</td>
-
-                  {/* عمود الاكشن */}
-                  <td className="p-2 border flex gap-2">
-                    {!t.leave_day && !t.absence_day && (
-                      <button
-                        onClick={() => editTransaction(t)}
-                        className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                      >
-                        تعديل
-                      </button>
-                    )}
-
-                    <button
-                      onClick={() => deleteTransaction(t.id)}
-                      className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700"
-                    >
-                      حذف
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* فورم إضافة معاملة */}
-      {canAddTransactions && (
-        <form onSubmit={handleSave} className="space-y-4 mb-6">
-          <h2 className="text-lg font-bold mb-2">إضافة معاملة جديدة</h2>
+      {/* Date Selectors */}
+      <div className="mb-6 flex gap-4 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-bold text-slate-600">الشهر:</label>
           <select
-            name="type"
-            value={form.type}
-            onChange={handleChange}
-            className="w-full border rounded p-2"
+            value={month}
+            onChange={(e) => setMonth(Number(e.target.value))}
+            className="border border-slate-200 rounded-xl p-2 bg-white font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
           >
-            <option value="bonus">علاوة / إضافة</option>
-            <option value="deduction">خصم</option>
-            <option value="advance">سلفة</option>
+            {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
           </select>
-          <input
-            type="number"
-            name="amount"
-            value={form.amount}
-            onChange={handleChange}
-            required
-            className="w-full border rounded p-2"
-            placeholder="المبلغ"
-          />
-          <input
-            type="text"
-            name="note"
-            value={form.note}
-            onChange={handleChange}
-            className="w-full border rounded p-2"
-            placeholder="ملاحظات"
-          />
-          <input
-            type="date"
-            name="date"
-            value={form.date}
-            onChange={handleChange}
-            className="w-full border rounded p-2"
-            max={new Date().toISOString().split("T")[0]}
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-bold text-slate-600">السنة:</label>
+          <select
+            value={year}
+            onChange={(e) => setYear(Number(e.target.value))}
+            className="border border-slate-200 rounded-xl p-2 bg-white font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
           >
-            {loading ? "⏳ جاري الحفظ..." : "💾 حفظ"}
-          </button>
-        </form>
+            {[2024, 2025, 2026].map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* KPI Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {/* Base Salary */}
+        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-bold text-slate-400">الراتب الأساسي</p>
+            <p className="text-2xl font-black text-slate-800 mt-1">{baseSalary.toFixed(2)} ج.م</p>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-650 flex items-center justify-center font-bold text-lg">
+            💵
+          </div>
+        </div>
+
+        {/* Daily Rate */}
+        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-bold text-slate-400">الأجر اليومي (26 يوم)</p>
+            <p className="text-2xl font-black text-slate-800 mt-1">{dailySalary.toFixed(2)} ج.م</p>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-650 flex items-center justify-center font-bold text-lg">
+            📅
+          </div>
+        </div>
+
+        {/* Earned Salary */}
+        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-bold text-slate-400">المستحق الفعلي ({daysWorked} يوم عمل)</p>
+            <p className="text-2xl font-black text-slate-800 mt-1">{earnedSalary.toFixed(2)} ج.م</p>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-650 flex items-center justify-center font-bold text-lg">
+            ✓
+          </div>
+        </div>
+
+        {/* Total Bonus */}
+        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-bold text-slate-400">إجمالي العلاوات</p>
+            <p className="text-2xl font-black text-emerald-600 mt-1">+{bonus.toFixed(2)} ج.م</p>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-green-50 text-green-650 flex items-center justify-center font-bold text-lg">
+            📈
+          </div>
+        </div>
+
+        {/* Normal & Leave & Absence Deductions */}
+        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-bold text-slate-400">إجمالي الخصومات</p>
+            <p className="text-2xl font-black text-rose-600 mt-1">-{deduction.toFixed(2)} ج.م</p>
+            <div className="text-[10px] text-slate-400 mt-1 flex gap-2">
+              <span>إجازات: {leaveDeduction.toFixed(0)}</span>
+              <span>غياب: {absenceDeduction.toFixed(0)}</span>
+            </div>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-650 flex items-center justify-center font-bold text-lg">
+            📉
+          </div>
+        </div>
+
+        {/* Advances */}
+        <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm flex items-center justify-between">
+          <div>
+            <p className="text-xs font-bold text-slate-400">إجمالي السلف</p>
+            <p className="text-2xl font-black text-amber-600 mt-1">-{advance.toFixed(2)} ج.م</p>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-650 flex items-center justify-center font-bold text-lg">
+            💸
+          </div>
+        </div>
+
+        {/* Net Salary (Highlight) */}
+        <div className={`col-span-1 sm:col-span-2 rounded-2xl border p-5 shadow-sm flex items-center justify-between transition ${netSalary >= 0 ? "bg-emerald-600 text-white border-emerald-600" : "bg-rose-600 text-white border-rose-600"}`}>
+          <div>
+            <p className="text-xs font-bold opacity-80">صافي الراتب بعد المعاملات</p>
+            <p className="text-3xl font-black mt-1.5">{netSalary.toFixed(2)} ج.م</p>
+          </div>
+          <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-xl font-bold">
+            💰
+          </div>
+        </div>
+      </div>
+
+      {/* Attendance & Leave Quick Actions */}
+      {canAddTransactions && (
+        <div className="mb-6 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex flex-wrap gap-4 items-center justify-between">
+          <span className="text-sm font-bold text-slate-700">التسجيل السريع للحضور والغياب:</span>
+          <div className="flex gap-3">
+            <button
+              onClick={() => addLeaveOrAbsence("leave")}
+              disabled={loading}
+              className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 px-5 py-2.5 rounded-xl font-bold text-sm transition disabled:opacity-50"
+            >
+              🌴 تسجيل إجازة يوم
+            </button>
+            <button
+              onClick={() => addLeaveOrAbsence("absence")}
+              disabled={loading}
+              className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-5 py-2.5 rounded-xl font-bold text-sm transition disabled:opacity-50"
+            >
+              ❌ تسجيل غياب يوم
+            </button>
+          </div>
+        </div>
       )}
+
+      {/* Main Grid: Transactions list & Add Transaction form */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* Transactions Table (Left Col) */}
+        <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-100 shadow-sm p-6 overflow-hidden">
+          <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+            سجل المعاملات لهذا الشهر ({month}/{year})
+          </h2>
+          {transactions.length === 0 ? (
+            <div className="text-center py-10 text-slate-400 font-medium">
+              لا توجد معاملات مسجلة للموظف في هذا الشهر.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-right border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-600 border-b border-slate-100 text-xs font-bold">
+                    <th className="p-3">التاريخ</th>
+                    <th className="p-3">النوع</th>
+                    <th className="p-3">المبلغ</th>
+                    <th className="p-3">ملاحظات</th>
+                    <th className="p-3 text-center">إجراءات</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-xs">
+                  {transactions.map((t, idx) => (
+                    <tr key={t.id} className="hover:bg-slate-50/50 transition">
+                      <td className="p-3 text-slate-500 font-mono">
+                        {new Date(t.date).toLocaleDateString("ar-EG")}
+                      </td>
+                      <td className="p-3">
+                        {t.leave_day ? (
+                          <span className="text-amber-700 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full font-bold">إجازة يوم</span>
+                        ) : t.absence_day ? (
+                          <span className="text-rose-700 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded-full font-bold">غياب يوم</span>
+                        ) : t.type === "bonus" ? (
+                          <span className="text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full font-bold">علاوة</span>
+                        ) : t.type === "deduction" ? (
+                          <span className="text-red-700 bg-red-50 border border-red-100 px-2 py-0.5 rounded-full font-bold">خصم</span>
+                        ) : t.type === "advance" ? (
+                          <span className="text-purple-700 bg-purple-50 border border-purple-100 px-2 py-0.5 rounded-full font-bold">سلفة</span>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
+                      <td className="p-3 font-bold text-slate-700">
+                        {t.amount.toFixed(2)} ج.م
+                      </td>
+                      <td className="p-3 text-slate-600 font-medium">
+                        {t.note || "—"}
+                      </td>
+                      <td className="p-3">
+                        <div className="flex gap-1.5 justify-center">
+                          {!t.leave_day && !t.absence_day && (
+                            <button
+                              onClick={() => editTransaction(t)}
+                              className="px-2.5 py-1 bg-green-50 hover:bg-green-100 text-green-700 border border-green-100 rounded-lg font-bold transition text-[10px]"
+                            >
+                              ✏️ تعديل
+                            </button>
+                          )}
+                          <button
+                            onClick={() => deleteTransaction(t.id)}
+                            className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-100 rounded-lg font-bold transition text-[10px]"
+                          >
+                            🗑️ حذف
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Add Transaction form (Right Col) */}
+        {canAddTransactions && (
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+            <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+              إضافة معاملة جديدة
+            </h2>
+            <form onSubmit={handleSave} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">نوع المعاملة</label>
+                <select
+                  name="type"
+                  value={form.type}
+                  onChange={handleChange}
+                  className="w-full p-2.5 border border-slate-200 rounded-xl bg-white font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                >
+                  <option value="bonus">علاوة / إضافة 📈</option>
+                  <option value="deduction">خصم 📉</option>
+                  <option value="advance">سلفة 💸</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">المبلغ (جنيه)</label>
+                <input
+                  type="number"
+                  name="amount"
+                  value={form.amount}
+                  onChange={handleChange}
+                  required
+                  placeholder="أدخل المبلغ"
+                  className="w-full p-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">ملاحظات / سبب المعاملة</label>
+                <input
+                  type="text"
+                  name="note"
+                  value={form.note}
+                  onChange={handleChange}
+                  placeholder="أدخل الملاحظات هنا"
+                  className="w-full p-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">التاريخ</label>
+                <input
+                  type="date"
+                  name="date"
+                  value={form.date}
+                  onChange={handleChange}
+                  className="w-full p-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium"
+                  max={new Date().toISOString().split("T")[0]}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold shadow-sm transition disabled:opacity-50"
+              >
+                {loading ? "جاري الإضافة..." : "حفظ المعاملة المالية"}
+              </button>
+            </form>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
