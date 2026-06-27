@@ -31,7 +31,7 @@ export default function AdminLogin() {
 
     localStorage.setItem(
       "admin_user",
-      JSON.stringify({ id: data.id, username: data.username })
+      JSON.stringify({ id: data.id, username: data.username, password: data.password })
     );
 
     router.push("/admin/dashboard");
